@@ -218,8 +218,22 @@ define('jj', [], function () {
     };
     
     //Special function for requireJS
-
     jj.load = function (name, parentRequire, onload, config){
+        
+        //Check plugins, which are not specified in an external script
+        if(config.jj.plugins && !config.jj.plugins.loaded){
+            for(var pluginName in config.jj.plugins){
+                jj.setPlugin(pluginName, config.jj.plugins[pluginName]);
+            }
+            config.jj.plugins.loaded = true;
+        }
+        
+        //Don't set a plugin twice
+        if(_jj.plugins[name]){
+            onload();
+            return false;
+        }
+        
         parentRequire([name], function (value) {
             jj.setPlugin(name, value);
             onload(value);
