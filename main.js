@@ -249,7 +249,7 @@ define('jj', [], function () {
 
     //Class to type, adapted from jQuery
     _jj.class2type = new Array();
-    jj.obj(("Boolean Number String Function Array Date RegExp Object").split(" ")).execute(function(){
+    jj.obj(("Boolean NodeList Number String Function Array Date RegExp Object").split(" ")).execute(function(){
         _jj.class2type[ "[object " + this + "]" ] = this.toLowerCase();
     });
     
