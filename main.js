@@ -1,21 +1,35 @@
-// "DEFINE"-FUNCTION
+if(typeof window !== 'undefined' && typeof global === 'undefined'){
+    global = window;
+    global.isBrowser = true;
+}
+else {
+    global.isBrowser = false;
+}
+
+// // "DEFINE"-FUNCTION
 // If you don't use a define function (for instance with require.js),
 // we'll declare a define funtion, which puts the object in the global namespace
 // We recommond, to avoid this!
 
-if(typeof define == 'undefined'){
-    //Fallback for define function, if you are not using AMD
-    window.define = function(name, deps, object){
-        if(typeof jj === 'undefined' && name === 'jj'){
-            window['jj'] = object();
-        }
-        else {
-            jj.setPlugin(name, object());
-        }
-    };
+if(typeof define !== 'function'){
+    
+    if (typeof require === 'function') { 
+        global.define = require('amdefine')(module) 
+    }
+    else {
+        //Fallback for define function, if you are not using AMD
+        global.define = function(name, deps, object){
+            if(typeof jj === 'undefined' && name === 'jj'){
+                global['jj'] = object();
+            }
+            else {
+                jj.setPlugin(name, object());
+            }
+        };
+    }
 }
 
-define('jj', [], function () {
+define([], function () {
     
     //Poloyfill for Object.create
     if (!Object.create) {
@@ -43,7 +57,7 @@ define('jj', [], function () {
         utilies : {
             extend : function(object, extendingObject){
                 //Check, if Element is a DOM Node - in this case, we don't create a new object
-                if(object instanceof (typeof HTMLElement !== "undefined" ? HTMLElement : Element)){
+                if(global.isBrowser && object instanceof (typeof HTMLElement !== "undefined" ? HTMLElement : Element)){
                     var clone = object;
                 }
                 else {
@@ -52,7 +66,7 @@ define('jj', [], function () {
                 
                 var protoAccess = (Object.getPrototypeOf) ? (Object.getPrototypeOf({ __proto__: null }) === null) : (false);
         
-                if(!protoAccess || clone instanceof HTMLElement){
+                if(!protoAccess || (global.isBrowser && clone instanceof HTMLElement)){
                     for (var key in extendingObject){
                         clone[key] = extendingObject[key];
                     }
@@ -166,6 +180,7 @@ define('jj', [], function () {
     
     //Special method, for setting plugins with abilities of jj
     jj.setPlugin = function(name, object){
+
         if(object.constructor !== Object || typeof object.prototype !== 'undefined'){
             //Given Object must be called as a constructor function
             //Create method for creating a new instance
@@ -259,9 +274,6 @@ define('jj', [], function () {
             _jj.class2type[ toString.call(obj) ] || "object";    
     }
     
-   
     return jj;
     
 });
-
-
