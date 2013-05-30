@@ -1,8 +1,7 @@
 /* If you are using a plugin on the server, please use the Node plugin "amdefine" and this line of code*/
 if (typeof define !== 'function' && typeof require === 'function') { var define = require('amdefine')(module) }
 
-
-define('myPlugin', [], function () {
+define([], function () {
     
     var plugin = {
         trigger : function(){},
