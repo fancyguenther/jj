@@ -119,7 +119,7 @@ if ( !Array.prototype.forEach ) {
                 for (var key in abstractObject){
                     if(typeof abstractObject[key] === 'function'){
                         abstractObject[key] = function(){
-                            throw new Error(key + ' is a abstract method of ' + this.getObject() + '. You need to override it.');
+                            throw new Error(key + ' is a abstract method. You need to override it.');
                         }
                     }
                 }
