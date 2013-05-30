@@ -14,7 +14,7 @@ else {
 if(typeof define !== 'function'){
     
     if (typeof require === 'function') { 
-        global.define = require('amdefine')(module) 
+        global.define = require('amdefine')(module)
     }
     else {
         //Fallback for define function, if you are not using AMD
