@@ -1,58 +1,37 @@
-if(typeof window !== 'undefined' && typeof global === 'undefined'){
-    global = window;
-    global.isBrowser = true;
+//Poloyfill for Object.create
+if (!Object.create) {
+    Object.create = function (o) {
+        if (arguments.length > 1) {
+            throw new Error('Object.create implementation only accepts the first parameter.');
+        }
+        function F() {}
+        F.prototype = o;
+        return new F();
+    };
 }
-else {
-    global.isBrowser = false;
+//Polyfill for Array.forEach
+if ( !Array.prototype.forEach ) {
+    Array.prototype.forEach = function(fn, scope) {
+        for(var i = 0, len = this.length; i < len; ++i) {
+            fn.call(scope, this[i], i, this);
+        }
+    }
 }
 
-// // "DEFINE"-FUNCTION
-// If you don't use a define function (for instance with require.js),
-// we'll declare a define funtion, which puts the object in the global namespace
-// We recommond, to avoid this!
-
-if(typeof define !== 'function'){
+(function() {
     
-    if (typeof require === 'function') { 
-        global.define = require('amdefine')(module)
+    /* ENVIROMENT */
+    var global = this;
+    if(typeof global.window !== 'undefined'){
+        global.isBrowser = true;
     }
     else {
-        //Fallback for define function, if you are not using AMD
-        global.define = function(name, deps, object){
-            if(typeof jj === 'undefined' && name === 'jj'){
-                global['jj'] = object();
-            }
-            else {
-                jj.setPlugin(name, object());
-            }
-        };
-    }
-}
-
-define([], function () {
-    
-    //Poloyfill for Object.create
-    if (!Object.create) {
-        Object.create = function (o) {
-            if (arguments.length > 1) {
-                throw new Error('Object.create implementation only accepts the first parameter.');
-            }
-            function F() {}
-            F.prototype = o;
-            return new F();
-        };
-    }
-    //Polyfill for Array.forEach
-    if ( !Array.prototype.forEach ) {
-        Array.prototype.forEach = function(fn, scope) {
-            for(var i = 0, len = this.length; i < len; ++i) {
-                fn.call(scope, this[i], i, this);
-            }
-        }
+        global.isBrowser = false;
     }
         
     //Private object for holding the plugins and basic functions
     var _jj = {
+        isBrowser : global.isBrowser,
         plugins: {},
         utilies : {
             extend : function(object, extendingObject){
@@ -274,6 +253,19 @@ define([], function () {
             _jj.class2type[ toString.call(obj) ] || "object";    
     }
     
-    return jj;
-    
-});
+
+  /* MODULE EXPORT */
+  if (global.define && define.amd) {
+    // Publish as AMD module
+    define(function() {return jj;});
+  } 
+  else if (typeof(module) != 'undefined' && module.exports) {
+    // Publish as node.js module
+    module.exports = jj;
+  } 
+  else {
+    // Publish as global (in browsers)
+    global["jj"] = jj;
+  }
+  
+}());
