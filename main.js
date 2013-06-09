@@ -46,14 +46,18 @@ if ( !Array.prototype.forEach ) {
                 var protoAccess = (Object.getPrototypeOf) ? (Object.getPrototypeOf({ __proto__: null }) === null) : (false);
         
                 if(!protoAccess || (global.isBrowser && clone instanceof HTMLElement)){
-                    for (var key in extendingObject){
-                        clone[key] = extendingObject[key];
-                    }
+                    this.enrich(clone, extendingObject);
                     return clone;
                 }
                 else {
                     extendingObject.__proto__ = clone;
                     return extendingObject;
+                }
+            },
+            /* "Classical" way to extend an object - iterating though the original object and modify it*/
+            enrich : function(object, extendingObject){
+                for (var key in extendingObject){
+                    object[key] = extendingObject[key];
                 }
             }
         }
@@ -129,6 +133,11 @@ if ( !Array.prototype.forEach ) {
             extend: function(extendingObject){
                 this.setObject(_jj.utilies.extend(this.getObject(), extendingObject));
                 return this; 
+            },
+            
+            enrich: function(extendingObject){
+                this.setObject(_jj.utilies.enrich(this.getObject(), extendingObject));
+                return this;                
             }
         }
     }();

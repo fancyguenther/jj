@@ -6,7 +6,5 @@
   "repository": "",
   "author": "",
   "license": "BSD",
-  "dependencies": {
-       "amdefine": ">=0.0.5"
-   }  
+  "dependencies": {}  
 }
