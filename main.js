@@ -259,7 +259,7 @@ if ( !Array.prototype.forEach ) {
     jj.getType = function(obj){
     return obj == null ?
             String( obj ) :
-            _jj.class2type[ toString.call(obj) ] || "object";    
+            _jj.class2type[ String(obj) ] || "object";    
     }
     
 
