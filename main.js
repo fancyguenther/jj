@@ -172,17 +172,9 @@ if ( !Array.prototype.forEach ) {
         if(object.constructor !== Object || typeof object.prototype !== 'undefined'){
             //Given Object must be called as a constructor function
             //Create method for creating a new instance
-           if (Function.prototype.bind) {
-                this[name] = function(){
-                     return new (Function.prototype.bind.apply(object, arguments)); 
-                }
-           }
-           else {
-               this[name] = function(){
-                   return new object();
-               }
-           }
-
+            this[name] = function(){
+                return new object();
+            }
         }
         else {
             var plugin = _jj.utilies.extend(jj, object);
