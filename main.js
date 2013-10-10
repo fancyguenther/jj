@@ -167,28 +167,43 @@ if ( !Array.prototype.forEach ) {
 
     
     //Special method, for setting plugins with abilities of jj
-    jj.setPlugin = function(name, object){
-
+    jj.setPlugin = function(name, object, extendingObject){
+ 
         if(object.constructor !== Object || typeof object.prototype !== 'undefined'){
             //Given Object must be called as a constructor function
             //Create method for creating a new instance
-            this[name] = function(){
-                return new object();
+            var args = arguments;
+            function F() {
+                return object.apply(this, args);
             }
+            F.prototype = object.prototype;
+            var plugin = {
+                init: function(){
+                    try{var instance = new F();}
+                    catch(e){var instance = new object();}
+                    
+                    if(typeof extendingObject === 'object'){
+                        for(var i in extendingObject){
+                            instance[i] = extendingObject[i];
+                        }
+                    }
+                    return instance;
+                }
+            };
         }
         else {
+            var object = (typeof extendingObject !== 'undefined') ? _jj.utilies.extend(object, extendingObject) : object;
             var plugin = _jj.utilies.extend(jj, object);
+        }
             _jj.plugins[name] = plugin;
 
             //Create method for creating a new object with plugin prototype
             this[name] = function(initObject){
-                
-
                 //Create an empty object with the plugin als prototype
-                var plugin = Object.create(_jj.plugins[name]);
+                var _plugin = Object.create(_jj.plugins[name]);
                 
                 //Set current registry to the registry of the plugin
-                plugin.registry = this.registry;
+                _plugin.registry = this.registry;
                 
                 /*
                 plugin.registry = new Array();
@@ -198,15 +213,14 @@ if ( !Array.prototype.forEach ) {
                 */
                                
                 //Check if plugin has an init function and execute it
-                if(typeof plugin.init === 'function'){
-                    return (arguments.length > 0) ? plugin.init.apply(plugin, arguments) : plugin.init();
+                if(typeof _plugin.init === 'function'){
+                    return (arguments.length > 0) ? _plugin.init.apply(plugin, arguments) : _plugin.init();
 
                 }
                 else {
-                    return plugin;
+                    return _plugin;
                 }
             };
-        }
 
         return this;
         
