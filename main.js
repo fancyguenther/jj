@@ -34,15 +34,16 @@ if ( !Array.prototype.forEach ) {
         isBrowser : global.isBrowser,
         plugins: {},
         utilies : {
-            extend : function(object, extendingObject){
-                //Check, if Element is a DOM Node - in this case, we don't create a new object
+            create : function(object, extendingObject){
+                var extendingObject = extendingObject || {};
+                 //Check, if Element is a DOM Node - in this case, we don't create a new object
                 if(global.isBrowser && object instanceof (typeof HTMLElement !== "undefined" ? HTMLElement : Element)){
                     var clone = object;
                 }
                 else {
                     var clone = Object.create(object);
                 }
-                
+                                
                 var protoAccess = (Object.getPrototypeOf) ? (Object.getPrototypeOf({ __proto__: null }) === null) : (false);
         
                 if(!protoAccess || (global.isBrowser && clone instanceof HTMLElement)){
@@ -54,11 +55,21 @@ if ( !Array.prototype.forEach ) {
                     return extendingObject;
                 }
             },
-            /* "Classical" way to extend an object - iterating though the original object and modify it*/
-            enrich : function(object, extendingObject){
+            /* "Classical" way to create an object - iterating though the original object and modify it*/
+            extend : function(object, extendingObject){
                 for (var key in extendingObject){
                     object[key] = extendingObject[key];
                 }
+            },
+            copy : function(object){
+                var copy = this.create(object);
+                //Replace object literals, otherwise the copy would reference the original
+                for(var i in object){
+                    if(typeof object[i] === 'object' && object.hasOwnProperty(i)){
+                        copy[i] = JSON.parse(JSON.stringify(object[i]));
+                    }
+                }
+                return copy;
             }
         }
     };
@@ -77,8 +88,13 @@ if ( !Array.prototype.forEach ) {
     
     jj.registry = new Array();
     
-    jj.set =  function(name, object){
-        this.registry[name] = object;
+    jj.set =  function(name, object, local){
+        if(local){
+            jj.registry[name] = object;
+        }
+        else {
+            this.registry[name] = object;
+        }
         return this;
     };
     
@@ -97,14 +113,12 @@ if ( !Array.prototype.forEach ) {
     _jj.obj = function(){
         
         return {
-            object: {},
             init: function(){
-                return this.setObject(arguments[0]);
-       
+                return this.setObject(arguments[0]);       
             },
             setObject : function(value){
                 if(typeof value !== 'undefined'){
-                    this.set('object', value);
+                    this.set('object', value, false);
                 }
                 return this;
             },
@@ -130,13 +144,13 @@ if ( !Array.prototype.forEach ) {
                 return this;
             },
             
-            extend: function(extendingObject){
-                this.setObject(_jj.utilies.extend(this.getObject(), extendingObject));
+            create: function(extendingObject){
+                this.setObject(_jj.utilies.create(this.getObject(), extendingObject));
                 return this; 
             },
             
-            enrich: function(extendingObject){
-                this.setObject(_jj.utilies.enrich(this.getObject(), extendingObject));
+            extend: function(extendingObject){
+                this.setObject(_jj.utilies.extend(this.getObject(), extendingObject));
                 return this;                
             }
         }
@@ -192,35 +206,29 @@ if ( !Array.prototype.forEach ) {
             };
         }
         else {
-            var object = (typeof extendingObject !== 'undefined') ? _jj.utilies.extend(object, extendingObject) : object;
-            var plugin = _jj.utilies.extend(jj, object);
+            var object = (typeof extendingObject !== 'undefined') ? _jj.utilies.create(object, extendingObject) : object;
+            var plugin = _jj.utilies.create(jj, object);
         }
-            _jj.plugins[name] = plugin;
+        
+        _jj.plugins[name] = plugin;
 
-            //Create method for creating a new object with plugin prototype
-            this[name] = function(initObject){
-                //Create an empty object with the plugin als prototype
-                var _plugin = Object.create(_jj.plugins[name]);
-                
-                //Set current registry to the registry of the plugin
-                _plugin.registry = this.registry;
-                
-                /*
-                plugin.registry = new Array();
-                for (var index in this.registry){
-                    plugin.registry[index] = (index === 'object' && name === 'obj') ? false : (this.registry[index]);
-                };
-                */
-                               
-                //Check if plugin has an init function and execute it
-                if(typeof _plugin.init === 'function'){
-                    return (arguments.length > 0) ? _plugin.init.apply(plugin, arguments) : _plugin.init();
+        //Create method for creating a new object with plugin prototype
+        this[name] = function(initObject){
+            //Create an copy of the plugin object
+            var _plugin = _jj.utilies.copy(_jj.plugins[name]);
 
-                }
-                else {
-                    return _plugin;
-                }
-            };
+            //Set current registry to the registry of the plugin
+            _plugin.registry = Object.create(this.registry);
+
+            //Check if plugin has an init function and execute it
+            if(typeof _plugin.init === 'function'){
+                return (arguments.length > 0) ? _plugin.init.apply(_plugin, arguments) : _plugin.init();
+
+            }
+            else {
+                return _plugin;
+            }
+        };
 
         return this;
         
