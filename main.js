@@ -47,7 +47,7 @@ if ( !Array.prototype.forEach ) {
                 var protoAccess = (Object.getPrototypeOf) ? (Object.getPrototypeOf({ __proto__: null }) === null) : (false);
         
                 if(!protoAccess || (global.isBrowser && clone instanceof HTMLElement)){
-                    this.enrich(clone, extendingObject);
+                    this.extend(clone, extendingObject);
                     return clone;
                 }
                 else {
@@ -63,13 +63,30 @@ if ( !Array.prototype.forEach ) {
             },
             copy : function(object){
                 var copy = this.create(object);
-                //Replace object literals, otherwise the copy would reference the original
+                //Clone object literals, otherwise the copy would reference the original
                 for(var i in object){
                     if(typeof object[i] === 'object' && object.hasOwnProperty(i)){
-                        copy[i] = JSON.parse(JSON.stringify(object[i]));
+                        var methods = {};
+                        copy[i] = this.clone(copy[i])
                     }
                 }
                 return copy;
+            },
+            clone : function(object){
+                var _self = this,
+                    _methods = {};
+                return JSON.parse(JSON.stringify(object, function(key, value){
+                    if(typeof value === 'function'){
+                        _methods[key] = value;
+                        return '__FUNCTION__';
+                    }
+                    return value;
+                }), function(key, value){
+                    if(value === '__FUNCTION__' && typeof _methods[key] === 'function'){
+                        return _methods[key];
+                    }
+                    return value;
+                });
             }
         }
     };
@@ -146,6 +163,11 @@ if ( !Array.prototype.forEach ) {
             
             create: function(extendingObject){
                 this.setObject(_jj.utilies.create(this.getObject(), extendingObject));
+                return this; 
+            },
+                    
+            copy: function(){
+                this.setObject(_jj.utilies.copy(this.getObject()));
                 return this; 
             },
             
