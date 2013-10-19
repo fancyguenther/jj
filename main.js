@@ -106,25 +106,45 @@ if ( !Array.prototype.forEach ) {
     jj.registry = new Array();
     
     jj.set =  function(name, object, local){
-        if(local){
-            jj.registry[name] = object;
-        }
-        else {
-            this.registry[name] = object;
-        }
+        var instance = local ? jj : this;
+        instance.registry[name] = object;
         return this;
     };
     
-    jj.push = function(name, object){
-        if(jj.getType(this.registry[name]) !== 'array'){
-            this.registry[name] = new Array();
+    jj.push = function(name, object, local){
+        var instance = local ? jj : this;
+        if(jj.getType(instance.registry[name]) !== 'array'){
+            instance.registry[name] = [];
         }
-        this.registry[name].push(object);
+        instance.registry[name].push(object);
+        return this;
     };
     
     jj.get = function(name){
         return this.registry[name];
-    }
+    };
+    
+    jj.on = function(event, func, action, local){
+        var action = action || 'push',
+            local = local || false;
+        if(typeof func === 'function'){
+            this[action](event, func, local);
+        }
+        return this;
+    };
+    
+    jj.trigger = function(){
+        var event = arguments[0],
+            args = Array.prototype.slice.call(arguments, 1),
+            funcs = this.registry[event];
+        if(this.getType(funcs) !== 'array'){
+            funcs = new Array(funcs);
+        }
+        this.obj(funcs).execute(function(){
+            this.apply(this, args);
+        });
+        return this;
+    };
 
     //utilies for working with objects
     _jj.obj = function(){
@@ -295,7 +315,7 @@ if ( !Array.prototype.forEach ) {
     jj.getType = function(obj){
     return obj == null ?
             String( obj ) :
-            _jj.class2type[ String(obj) ] || "object";    
+            _jj.class2type[ Object.prototype.toString.call(obj)  ] || "object";    
     }
     
 
