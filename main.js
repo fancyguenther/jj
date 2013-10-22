@@ -124,26 +124,29 @@ if ( !Array.prototype.forEach ) {
         return this.registry[name];
     };
     
-    jj.on = function(event, func, action, local){
+    jj.on = function(events, func, action, local){
         var action = action || 'push',
-            local = local || false;
+            local = local || false,
+            self = this;
         if(typeof func === 'function'){
-            this[action](event, func, local);
+            this.obj(events).execute(function(){
+                self[action](this, func, local);
+            });
         }
         return this;
     };
     
     jj.trigger = function(){
+        var self = this;
         var event = arguments[0],
             args = Array.prototype.slice.call(arguments, 1),
             funcs = this.registry[event];
-        if(this.getType(funcs) !== 'array'){
-            funcs = new Array(funcs);
-        }
         this.obj(funcs).execute(function(){
-            this.apply(this, args);
+            if(typeof this === 'function'){
+                this.apply(self, args);
+            }
         });
-        return this;
+        return self;
     };
 
     //utilies for working with objects
@@ -198,6 +201,17 @@ if ( !Array.prototype.forEach ) {
         }
     }();
     
+    //Class to type, adapted from jQuery
+    _jj.class2type = new Array();
+    ("Boolean NodeList Number String Function Array Date RegExp Object").split(" ").forEach(function(entry){
+        _jj.class2type[ "[object " + entry + "]" ] = entry.toLowerCase();
+    });
+    
+    jj.getType = function(obj){
+    return obj == null ?
+            String( obj ) :
+            _jj.class2type[ Object.prototype.toString.call(obj)  ] || "object";    
+    }
 
     //Execute something with an object;
     _jj.execute = {
@@ -206,18 +220,25 @@ if ( !Array.prototype.forEach ) {
                 var object = this.get('object');
                 if(typeof object === 'undefined' || object === null)
                     return this;
-                
-                if(typeof object.length !== 'undefined'){
-                    for(var i = 0; i < object.length; i++){
-                        callback.call(object[i], this);
-                    }
-                }
-                else {
-                    callback.call(object, this);
-                }
+               (this['handle' + this.getType(object)] || this['handledefault']).
+                    call(this, object, callback);
                 return this;
-            }
-        
+            },
+                    
+            iterate: function(object, callback){
+                for(var i = 0; i < object.length; i++){
+                    callback.call(object[i], this);
+                }        
+            },
+                    
+            handlestring: function(object, callback){
+                callback.call(object, this);
+            },
+            
+            handledefault: function(object, callback){
+                return typeof object.length !== 'undefined' ? 
+                    this.iterate(object, callback) : callback.call(object, this);
+            }              
     };
              
 
@@ -303,21 +324,7 @@ if ( !Array.prototype.forEach ) {
     jj.
         setPlugin('obj', _jj.obj).
         setPlugin('execute', _jj.execute);
-    
-    // ::: UTILY FUNCTIONS ::: //
 
-    //Class to type, adapted from jQuery
-    _jj.class2type = new Array();
-    jj.obj(("Boolean NodeList Number String Function Array Date RegExp Object").split(" ")).execute(function(){
-        _jj.class2type[ "[object " + this + "]" ] = this.toLowerCase();
-    });
-    
-    jj.getType = function(obj){
-    return obj == null ?
-            String( obj ) :
-            _jj.class2type[ Object.prototype.toString.call(obj)  ] || "object";    
-    }
-    
 
   /* MODULE EXPORT */
   if (global.define && define.amd) {
