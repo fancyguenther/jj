@@ -105,14 +105,14 @@ if ( !Array.prototype.forEach ) {
     
     jj.registry = new Array();
     
-    jj.set =  function(name, object, local){
-        var instance = local ? jj : this;
+    jj.set =  function(name, object, global){
+        var instance = global ? jj : this;
         instance.registry[name] = object;
         return this;
     };
     
-    jj.push = function(name, object, local){
-        var instance = local ? jj : this;
+    jj.push = function(name, object, global){
+        var instance = global ? jj : this;
         if(jj.getType(instance.registry[name]) !== 'array'){
             instance.registry[name] = [];
         }
@@ -124,28 +124,54 @@ if ( !Array.prototype.forEach ) {
         return this.registry[name];
     };
     
-    jj.on = function(events, func, action, local){
+    jj.on = function(events, func, action, global){
         var action = action || 'push',
-            local = local || false,
-            self = this;
+            self = this,
+            q = this.get('eventqueue');
         if(typeof func === 'function'){
             this.obj(events).execute(function(){
-                self[action](this, func, local);
+                self[action](this, func, global);
             });
+            //Execute callbacks which have been triggered before for this eventyy
+            this.obj(events).execute(function(){
+                self.execQueue(q, this);
+            })
         }
         return this;
     };
     
-    jj.trigger = function(){
+    jj.execQueue =  function(q, e){
         var self = this;
-        var event = arguments[0],
-            args = Array.prototype.slice.call(arguments, 1),
-            funcs = this.registry[event];
-        this.obj(funcs).execute(function(){
-            if(typeof this === 'function'){
-                this.apply(self, args);
+        self.obj(q).execute(function(){
+            if(this._e === e.toString()){
+                var funcs = self.registry[e],
+                    trigger = this;
+                self.obj(funcs).execute(function(){
+                    if(typeof this === 'function'){
+                        q.splice(q.indexOf(trigger), 1);
+                        this.apply(self, trigger._a);
+                    }
+                });
             }
         });
+        return this;
+    };
+    
+    jj.trigger = function(){
+        var self = this,
+            event = arguments[0],
+            args = Array.prototype.slice.call(arguments, 1),
+            funcs = self.registry[event];
+        if(typeof funcs !== 'undefined'){
+            this.obj(funcs).execute(function(){
+                this.apply(self, args);                
+            });
+        }
+        else {
+            //Put event into the queue if there is no callback so far
+            var q = this.get('eventqueue');
+            q.push({_e : event, _a : args});      
+        }        
         return self;
     };
 
@@ -281,8 +307,10 @@ if ( !Array.prototype.forEach ) {
             var _plugin = _jj.utilies.copy(_jj.plugins[name]);
 
             //Set current registry to the registry of the plugin
-            _plugin.registry = Object.create(this.registry);
-
+            _plugin.registry = _jj.utilies.create(this.registry, {
+                eventqueue : []
+            });
+            
             //Check if plugin has an init function and execute it
             if(typeof _plugin.init === 'function'){
                 return (arguments.length > 0) ? _plugin.init.apply(_plugin, arguments) : _plugin.init();

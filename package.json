@@ -1,10 +1,22 @@
 {
-  "name": "Tests",
-  "version": "0.0.0",
-  "description": "Tests",
+  "name": "jjs",
+  "version": "0.1.0",
+  "description": "jj - A javascript framework flexible like jam!",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mellors/jj.git"
+  },
   "main": "main.js",
-  "repository": "",
-  "author": "",
+  "author": {
+    "name": "Marcel Mellor"
+  },
   "license": "BSD",
-  "dependencies": {}  
+  "dependencies": {},
+  "readme": "# JJ  - A flexible javascript framework ##\n\n### Plugins ###\n\n\n---------------------------------------\n\n<a name=\"forEachSeries\" />\n<a name=\"eachSeries\" />\n### setPlugin(name, object)\n\nSet an object. \n\n__Example__\n\n```js\njj.setPlugin('myPlugin', {\n  getBar : function(){\n    return this.get('bar');\n  },\n  foo : function(){\n    console.log('foo method executed');\n  }\n);\n\njj.myPlugin().foo();\n//console.log = 'foo method executed';\n```\n\nIf you set a constructor function, jj will create a new instance.\n\n```js\njj.setPlugin('request', XMLHttpRequest);\n\nvar request = jj.request();\nrequest.open('https://github.com/mellors/jj');\nrequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')\n```\n\njj is every plugins prototype. So, you can mix native methods with methods of your plugin.\n\n```js\nvar bar = jj.\n  myPlugin().\n  set('moview', 'E.T.').\n  getBar();\n//bar = 'A new value';\n```\n\nIf you set a plugin globally (via jj.setPlugin), you can use it in other plugins as well.\n\n```js\njj.setPlugin('secondPlugin', {\n  getMovie : function(){\n    return this.get('movie');\n  }\n);\n\nvar moview = jj.\n  myPlugin().\n  set('moview', 'Jurassic Park').\n  secondPlugin().\n  myPlugin().\n  getMoview();\n\n//moview = 'Jurassic Parm';\n```\n\n\n\n---------------------------------------\n\n<a name=\"forEachSeries\" />\n<a name=\"eachSeries\" />\n### set(name, object, local)\n\nVia jj.set you can add an entry to the registry of jj. \n\n\n---------------------------------------\n",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/mellors/jj/issues"
+  },
+  "_id": "jjs@0.1.0",
+  "_from": "jjs@"
 }
