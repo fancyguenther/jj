@@ -271,7 +271,10 @@ if ( !Array.prototype.forEach ) {
     
     //Special method, for setting plugins with abilities of jj
     jj.setPlugin = function(name, object, extendingObject){
- 
+        
+        if(!name || !object){
+            return this;
+        }
         if(object.constructor !== Object || typeof object.prototype !== 'undefined'){
             //Given Object must be called as a constructor function
             //Create method for creating a new instance
@@ -327,7 +330,6 @@ if ( !Array.prototype.forEach ) {
     
     //Special function for requireJS
     jj.load = function (name, parentRequire, onload, config){
-        
         //Check plugins, which are not specified in an external script
         if(config.jj.plugins && !config.jj.plugins.loaded){
             for(var pluginName in config.jj.plugins){
@@ -353,19 +355,31 @@ if ( !Array.prototype.forEach ) {
         setPlugin('obj', _jj.obj).
         setPlugin('execute', _jj.execute);
 
-
+   
   /* MODULE EXPORT */
+ 
+  if(typeof process !== 'undefined'){
+        //Script is executed via command line - check, if it's the build process of requirejs
+        global.define = function(){
+            var b;
+            process.argv.forEach(function(val){
+                b = val.indexOf('requirejs') || b ? true : false;
+            });
+            return b;
+        }();
+  }
+  
   if (global.define && define.amd) {
     // Publish as AMD module
-    define(function() {return jj;});
-  } 
-  else if (typeof(module) != 'undefined' && module.exports) {
+    return define(function() {return jj;});
+  }
+  
+  if (typeof(module) !== 'undefined' && module.exports) {
     // Publish as node.js module
     module.exports = jj;
+    return;
   } 
-  else {
-    // Publish as global (in browsers)
-    global["jj"] = jj;
-  }
+  // Publish as global (in browsers)
+  global["jj"] = jj;
   
 }());
