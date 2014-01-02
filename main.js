@@ -301,11 +301,11 @@ if ( !Array.prototype.forEach ) {
             var object = (typeof extendingObject !== 'undefined') ? _jj.utilies.create(object, extendingObject) : object;
             var plugin = _jj.utilies.create(jj, object);
         }
-        
-        _jj.plugins[name] = plugin;
+        var normalizedName = name.replace(/(\-[a-z])/g, function($1){return $1.toUpperCase().replace('-','');});
+        _jj.plugins[name] = _jj.plugins[normalizedName] = plugin;
 
         //Create method for creating a new object with plugin prototype
-        this[name] = function(initObject){
+        this[normalizedName] = this[name] = function(initObject){
             //Create an copy of the plugin object
             var _plugin = _jj.utilies.copy(_jj.plugins[name]);
 
