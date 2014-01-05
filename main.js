@@ -237,7 +237,11 @@ if ( !Array.prototype.forEach ) {
     return obj == null ?
             String( obj ) :
             _jj.class2type[ Object.prototype.toString.call(obj)  ] || "object";    
-    }
+    };
+    
+    jj.isDom = function(object){
+        return (global.isBrowser && object instanceof (typeof HTMLElement !== "undefined" ? HTMLElement : Element)) ? true : false;
+    };
 
     //Execute something with an object;
     _jj.execute = {
