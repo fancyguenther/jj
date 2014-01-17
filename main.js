@@ -9,6 +9,7 @@ if (!Object.create) {
         return new F();
     };
 }
+
 //Polyfill for Array.forEach
 if ( !Array.prototype.forEach ) {
     Array.prototype.forEach = function(fn, scope) {
